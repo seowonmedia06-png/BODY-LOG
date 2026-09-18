@@ -16,6 +16,7 @@ interface HomeViewProps {
   userProfile: UserProfile | null;
   latestRecord?: MeasurementRecord;
   previousRecord?: MeasurementRecord;
+  totalRecordCount?: number;
   onOpenScanModal: () => void;
   onNavigateToRecords: () => void;
   onViewRecordDetail?: (recordId: string) => void;
@@ -24,7 +25,7 @@ interface HomeViewProps {
 export const HomeView: React.FC<HomeViewProps> = ({
   userProfile,
   latestRecord,
-  previousRecord,
+  totalRecordCount = 0,
   onOpenScanModal,
   onNavigateToRecords,
   onViewRecordDetail,
@@ -62,13 +63,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </p>
       </section>
 
-      {/* 2. Recent Measurement Summary Section */}
+      {/* 2. Recent Measurement Summary Section (Privacy-Protected: No Raw Body Composition Numbers on Home) */}
       {latestRecord ? (
-        <section className="bg-white rounded-2xl p-4 shadow-sm border border-[#eae7e7]/70 space-y-3">
+        <section className="bg-white rounded-2xl p-4 shadow-xs border border-[#eae7e7]/70 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[15px] font-bold text-[#1c1b1b]">최근 측정 요약</span>
-              <span className="text-[12px] text-[#5a5f66]">{latestRecord.date}</span>
+              <span className="text-[15px] font-bold text-[#1c1b1b]">최근 측정 상태</span>
+              <span className="text-[12px] font-medium text-[#0c4cda] bg-[#dce1ff] px-2 py-0.5 rounded-md">
+                기록 완료
+              </span>
             </div>
             {onViewRecordDetail && (
               <button
@@ -82,55 +85,35 @@ export const HomeView: React.FC<HomeViewProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            {/* 체중 */}
-            <div className="bg-[#f6f3f2] rounded-xl p-2.5">
-              <div className="text-[11px] text-[#5a5f66]">체중</div>
-              <div className="text-[16px] font-bold text-[#1c1b1b] mt-0.5">
-                {latestRecord.weight.toFixed(1)} <span className="text-[11px] font-normal text-[#5a5f66]">kg</span>
-              </div>
-              <div className="text-[11px] text-[#5a5f66] mt-1 font-medium">
-                {previousRecord
-                  ? latestRecord.weightDelta === 0
-                    ? '변동 없음'
-                    : `${latestRecord.weightDelta > 0 ? '+' : ''}${latestRecord.weightDelta.toFixed(1)}`
-                  : '첫 번째 측정'}
-              </div>
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
+            <div className="bg-[#f6f3f2] rounded-xl p-3 flex flex-col justify-center">
+              <span className="text-[11px] text-[#5a5f66]">최근 측정일</span>
+              <span className="text-[15px] font-bold text-[#1c1b1b] mt-0.5 font-mono">
+                {latestRecord.date}
+              </span>
             </div>
 
-            {/* 골격근량 */}
-            <div className="bg-[#f6f3f2] rounded-xl p-2.5">
-              <div className="text-[11px] text-[#5a5f66]">골격근량</div>
-              <div className="text-[16px] font-bold text-[#1c1b1b] mt-0.5">
-                {latestRecord.skeletalMuscle.toFixed(1)} <span className="text-[11px] font-normal text-[#5a5f66]">kg</span>
-              </div>
-              <div className="text-[11px] text-[#5a5f66] mt-1 font-medium">
-                {previousRecord
-                  ? latestRecord.muscleDelta === 0
-                    ? '변동 없음'
-                    : `${latestRecord.muscleDelta > 0 ? '+' : ''}${latestRecord.muscleDelta.toFixed(1)}`
-                  : '첫 번째 측정'}
-              </div>
+            <div className="bg-[#f6f3f2] rounded-xl p-3 flex flex-col justify-center">
+              <span className="text-[11px] text-[#5a5f66]">누적 측정 기록</span>
+              <span className="text-[15px] font-bold text-[#1c1b1b] mt-0.5">
+                총 {totalRecordCount > 0 ? totalRecordCount : 1}회
+              </span>
             </div>
+          </div>
 
-            {/* 체지방률 */}
-            <div className="bg-[#f6f3f2] rounded-xl p-2.5">
-              <div className="text-[11px] text-[#5a5f66]">체지방률</div>
-              <div className="text-[16px] font-bold text-[#1c1b1b] mt-0.5">
-                {latestRecord.bodyFatPercent.toFixed(1)} <span className="text-[11px] font-normal text-[#5a5f66]">%</span>
-              </div>
-              <div className="text-[11px] text-[#5a5f66] mt-1 font-medium">
-                {previousRecord
-                  ? latestRecord.fatDelta === 0
-                    ? '변동 없음'
-                    : `${latestRecord.fatDelta > 0 ? '+' : ''}${latestRecord.fatDelta.toFixed(1)}%p`
-                  : '첫 번째 측정'}
-              </div>
-            </div>
+          <div className="pt-1 flex items-center justify-between text-[12px] text-[#5a5f66] bg-[#f8f9fb] px-3 py-2 rounded-xl border border-[#eaecef]/60">
+            <span className="truncate">체중·근육량·체지방률 수치 및 상세 해석은 기록 탭에서 확인하세요.</span>
+            <button
+              type="button"
+              onClick={onNavigateToRecords}
+              className="text-[#0c4cda] font-semibold shrink-0 hover:underline ml-2"
+            >
+              기록 확인
+            </button>
           </div>
         </section>
       ) : (
-        <section className="bg-white rounded-2xl p-4 shadow-sm border border-[#eae7e7]/70 text-center py-5 space-y-2">
+        <section className="bg-white rounded-2xl p-4 shadow-xs border border-[#eae7e7]/70 text-center py-5 space-y-2">
           <p className="text-[14px] font-medium text-[#5a5f66]">
             아직 등록된 측정 기록이 없습니다.
           </p>

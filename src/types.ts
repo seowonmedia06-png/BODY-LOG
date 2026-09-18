@@ -9,6 +9,22 @@ export interface UserProfile {
   privacyMode?: boolean;
 }
 
+export interface MetricReferenceRange {
+  min?: number;
+  max?: number;
+  unit?: string;
+  rawLabel?: string;
+}
+
+export interface SheetReferenceRanges {
+  weight?: MetricReferenceRange;
+  skeletalMuscle?: MetricReferenceRange;
+  bodyFatPercent?: MetricReferenceRange;
+  bodyFatMass?: MetricReferenceRange;
+  bmi?: MetricReferenceRange;
+  visceralFat?: MetricReferenceRange;
+}
+
 export interface MeasurementRecord {
   id: string;
   userId: string;
@@ -28,6 +44,7 @@ export interface MeasurementRecord {
   isBaseline?: boolean;
   createdAt: string;
   sourceType?: 'camera' | 'gallery' | 'file';
+  referenceRanges?: SheetReferenceRanges;
 }
 
 export type TabType = 'home' | 'record' | 'my';

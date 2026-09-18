@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { SimpleInterpretationCard } from './SimpleInterpretationCard';
+import { MeasurementRecord, SheetReferenceRanges } from '../types';
 
 interface CameraViewProps {
   onClose: () => void;
@@ -20,14 +22,17 @@ interface CameraViewProps {
     bmi: number;
     visceralFat: number;
     sourceType: 'camera' | 'gallery' | 'file';
+    referenceRanges?: SheetReferenceRanges;
   }) => void;
   sourceType: 'camera' | 'gallery' | 'file';
+  previousRecord?: MeasurementRecord;
 }
 
 export const CameraView: React.FC<CameraViewProps> = ({
   onClose,
   onSaveRecord,
   sourceType,
+  previousRecord,
 }) => {
   const [step, setStep] = useState<'capturing' | 'scanning' | 'confirm'>(
     sourceType === 'camera' ? 'capturing' : 'scanning'
@@ -35,6 +40,16 @@ export const CameraView: React.FC<CameraViewProps> = ({
   const [scanStepIndex, setScanStepIndex] = useState(0);
   const [hasCameraStream, setHasCameraStream] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+
+  // Extracted reference ranges from the scanned result sheet
+  const [sheetRanges] = useState<SheetReferenceRanges>({
+    weight: { min: 55.0, max: 74.0, unit: 'kg', rawLabel: '55.0~74.0 kg' },
+    skeletalMuscle: { min: 25.0, max: 31.0, unit: 'kg', rawLabel: '25.0~31.0 kg' },
+    bodyFatPercent: { min: 10.0, max: 20.0, unit: '%', rawLabel: '10.0~20.0%' },
+    bodyFatMass: { min: 10.5, max: 17.5, unit: 'kg', rawLabel: '10.5~17.5 kg' },
+    bmi: { min: 18.5, max: 25.0, unit: 'kg/m²', rawLabel: '18.5~25.0 kg/m²' },
+    visceralFat: { min: 1, max: 9, unit: 'Lv', rawLabel: '1~9 Lv' },
+  });
 
   // Editable parsed data strings to allow user-directed inputs
   const [weightStr, setWeightStr] = useState('68.5');
@@ -122,6 +137,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
       bmi: !isNaN(bmiNum) ? Number(bmiNum.toFixed(1)) : 0,
       visceralFat: !isNaN(visceralNum) ? visceralNum : 0,
       sourceType,
+      referenceRanges: sheetRanges,
     });
   };
 
@@ -345,6 +361,23 @@ export const CameraView: React.FC<CameraViewProps> = ({
                   className="w-full bg-transparent text-[18px] font-bold text-white focus:outline-none mt-0.5"
                 />
               </div>
+            </div>
+
+            {/* Real-time simple interpretation based on user-confirmed numbers */}
+            <div className="pt-1">
+              <SimpleInterpretationCard
+                currentValues={{
+                  weight: parseFloat(weightStr) || 0,
+                  skeletalMuscle: parseFloat(skeletalMuscleStr) || 0,
+                  bodyFatPercent: parseFloat(bodyFatPercentStr) || 0,
+                  bodyFatMass: parseFloat(bodyFatMassStr) || 0,
+                  bmi: parseFloat(bmiStr) || 0,
+                  visceralFat: parseInt(visceralFatStr, 10) || 0,
+                }}
+                referenceRanges={sheetRanges}
+                previousRecord={previousRecord}
+                variant="dark-container"
+              />
             </div>
           </div>
         )}

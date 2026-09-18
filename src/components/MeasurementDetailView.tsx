@@ -8,6 +8,7 @@ import {
   Info,
 } from 'lucide-react';
 import { MeasurementRecord } from '../types';
+import { SimpleInterpretationCard } from './SimpleInterpretationCard';
 
 interface MeasurementDetailViewProps {
   record: MeasurementRecord;
@@ -35,6 +36,41 @@ export const MeasurementDetailView: React.FC<MeasurementDetailViewProps> = ({
   const diffWeight = hasPrevious ? record.weight - prevWeight : 0;
   const diffMuscle = hasPrevious ? record.skeletalMuscle - prevMuscle : 0;
   const diffFat = hasPrevious ? record.bodyFatPercent - prevFat : 0;
+
+  // Helper for subtitle under core 3 metrics
+  const getCoreSubtitle = (metric: 'weight' | 'skeletalMuscle' | 'bodyFatPercent') => {
+    const range = record.referenceRanges ? record.referenceRanges[metric] : undefined;
+    const val = record[metric];
+
+    if (metric === 'weight') {
+      if (hasPrevious) {
+        if (Math.abs(diffWeight) < 0.05) return '지난 기록과 비슷';
+        return `이전보다 ${Math.abs(diffWeight).toFixed(1)}kg ${diffWeight < 0 ? '감소' : '증가'}`;
+      }
+      return '첫 기록 기준점';
+    }
+
+    if (range && (range.min !== undefined || range.max !== undefined)) {
+      if (range.max !== undefined && val > range.max) {
+        return '기준 범위보다 높은 값';
+      }
+      if (range.min !== undefined && val < range.min) {
+        return '기준 범위보다 낮은 값';
+      }
+      return '기준 범위 내 위치';
+    }
+
+    if (metric === 'skeletalMuscle' && hasPrevious) {
+      if (Math.abs(diffMuscle) < 0.05) return '지난 기록과 비슷';
+      return `이전보다 ${Math.abs(diffMuscle).toFixed(1)}kg ${diffMuscle < 0 ? '감소' : '증가'}`;
+    }
+    if (metric === 'bodyFatPercent' && hasPrevious) {
+      if (Math.abs(diffFat) < 0.05) return '지난 기록과 비슷';
+      return `이전보다 ${Math.abs(diffFat).toFixed(1)}%p ${diffFat < 0 ? '감소' : '증가'}`;
+    }
+
+    return '측정값 확인됨';
+  };
 
   // Build real trajectory from actual records
   const trajectoryRecords = [...allRecords]
@@ -123,53 +159,62 @@ export const MeasurementDetailView: React.FC<MeasurementDetailViewProps> = ({
       {/* 4. 3 Core Metrics Grid */}
       <div className="grid grid-cols-3 gap-2">
         {/* Card 1: 체중 */}
-        <div className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white shadow-sm border border-[#eae7e7]/70">
-          <span className="text-[11px] text-[#5a5f66] mb-0.5">체중</span>
+        <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-xs border border-[#eae7e7]/70 text-center">
+          <span className="text-[11px] font-medium text-[#5a5f66] mb-0.5">체중</span>
           <div className="flex items-baseline gap-0.5 my-0.5">
-            <span className="text-[20px] font-bold text-[#1c1b1b]">
+            <span className="text-[19px] font-bold text-[#1c1b1b]">
               {record.weight.toFixed(1)}
             </span>
-            <span className="text-[12px] text-[#5a5f66]">kg</span>
+            <span className="text-[11px] text-[#5a5f66]">kg</span>
           </div>
-          <span className="text-[11px] text-[#0c4cda] font-semibold bg-[#f6f3f2] px-2 py-0.5 rounded-md mt-1">
-            {hasPrevious
-              ? `최근 ${record.weightDelta <= 0 ? '' : '+'}${record.weightDelta.toFixed(1)}`
-              : '기준점'}
+          <span className="text-[10px] text-[#434655] font-medium bg-[#f6f3f2] px-1.5 py-0.5 rounded-md mt-1 line-clamp-1">
+            {getCoreSubtitle('weight')}
           </span>
         </div>
 
         {/* Card 2: 골격근량 */}
-        <div className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white shadow-sm border border-[#eae7e7]/70">
-          <span className="text-[11px] text-[#5a5f66] mb-0.5">골격근량</span>
+        <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-xs border border-[#eae7e7]/70 text-center">
+          <span className="text-[11px] font-medium text-[#5a5f66] mb-0.5">골격근량</span>
           <div className="flex items-baseline gap-0.5 my-0.5">
-            <span className="text-[20px] font-bold text-[#1c1b1b]">
+            <span className="text-[19px] font-bold text-[#1c1b1b]">
               {record.skeletalMuscle.toFixed(1)}
             </span>
-            <span className="text-[12px] text-[#5a5f66]">kg</span>
+            <span className="text-[11px] text-[#5a5f66]">kg</span>
           </div>
-          <span className="text-[11px] text-[#0c4cda] font-semibold bg-[#f6f3f2] px-2 py-0.5 rounded-md mt-1">
-            {hasPrevious
-              ? `최근 ${record.muscleDelta <= 0 ? '' : '+'}${record.muscleDelta.toFixed(1)}`
-              : '기준점'}
+          <span className="text-[10px] text-[#434655] font-medium bg-[#f6f3f2] px-1.5 py-0.5 rounded-md mt-1 line-clamp-1">
+            {getCoreSubtitle('skeletalMuscle')}
           </span>
         </div>
 
         {/* Card 3: 체지방률 */}
-        <div className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white shadow-sm border border-[#eae7e7]/70">
-          <span className="text-[11px] text-[#5a5f66] mb-0.5">체지방률</span>
+        <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white shadow-xs border border-[#eae7e7]/70 text-center">
+          <span className="text-[11px] font-medium text-[#5a5f66] mb-0.5">체지방률</span>
           <div className="flex items-baseline gap-0.5 my-0.5">
-            <span className="text-[20px] font-bold text-[#1c1b1b]">
+            <span className="text-[19px] font-bold text-[#1c1b1b]">
               {record.bodyFatPercent.toFixed(1)}
             </span>
-            <span className="text-[12px] text-[#5a5f66]">%</span>
+            <span className="text-[11px] text-[#5a5f66]">%</span>
           </div>
-          <span className="text-[11px] text-[#0c4cda] font-semibold bg-[#f6f3f2] px-2 py-0.5 rounded-md mt-1">
-            {hasPrevious
-              ? `최근 ${record.fatDelta <= 0 ? '' : '+'}${record.fatDelta.toFixed(1)}`
-              : '기준점'}
+          <span className="text-[10px] text-[#434655] font-medium bg-[#f6f3f2] px-1.5 py-0.5 rounded-md mt-1 line-clamp-1">
+            {getCoreSubtitle('bodyFatPercent')}
           </span>
         </div>
       </div>
+
+      {/* 4.5. Simple Result Interpretation Card (간단한 결과 해석) */}
+      <SimpleInterpretationCard
+        currentValues={{
+          weight: record.weight,
+          skeletalMuscle: record.skeletalMuscle,
+          bodyFatPercent: record.bodyFatPercent,
+          bodyFatMass: record.bodyFatMass,
+          bmi: record.bmi,
+          visceralFat: record.visceralFat,
+        }}
+        referenceRanges={record.referenceRanges}
+        previousRecord={previousRecord}
+        variant="light"
+      />
 
       {/* 5. Detailed Body Composition (상세 정보) */}
       <div className="flex flex-col space-y-2">
@@ -469,6 +514,14 @@ export const MeasurementDetailView: React.FC<MeasurementDetailViewProps> = ({
         >
           <span>홈으로 돌아가기</span>
         </button>
+      </div>
+
+      {/* 9. Bottom Medical Disclaimer */}
+      <div className="flex items-start justify-center gap-1.5 px-3 py-2 text-center">
+        <Info className="w-3.5 h-3.5 text-[#747686] shrink-0 mt-0.5" />
+        <p className="text-[11px] text-[#747686] leading-tight">
+          측정 결과를 이해하기 위한 참고 정보이며, 의료적 진단을 의미하지 않습니다.
+        </p>
       </div>
     </div>
   );

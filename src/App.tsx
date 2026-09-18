@@ -3,6 +3,7 @@ import {
   User,
   UserProfile,
   MeasurementRecord,
+  SheetReferenceRanges,
   TabType,
   ViewType,
 } from './types';
@@ -324,6 +325,7 @@ export default function App() {
     bmi: number;
     visceralFat: number;
     sourceType: 'camera' | 'gallery' | 'file';
+    referenceRanges?: SheetReferenceRanges;
   }) => {
     if (!currentUser) return;
 
@@ -356,6 +358,7 @@ export default function App() {
       isLatest: true,
       isBaseline: userRecords.length === 0,
       createdAt: now.toISOString(),
+      referenceRanges: data.referenceRanges,
     };
 
     // Update records list
@@ -494,6 +497,7 @@ export default function App() {
             userProfile={userProfile}
             latestRecord={latestRecord}
             previousRecord={sortedRecords[1]}
+            totalRecordCount={userRecords.length}
             onOpenScanModal={handleOpenScanModal}
             onNavigateToRecords={() => setCurrentTab('record')}
             onViewRecordDetail={handleSelectRecordForDetail}
@@ -553,6 +557,7 @@ export default function App() {
           sourceType={scannerSource}
           onClose={() => setIsCameraActive(false)}
           onSaveRecord={handleSaveScannedRecord}
+          previousRecord={latestRecord}
         />
       )}
 
